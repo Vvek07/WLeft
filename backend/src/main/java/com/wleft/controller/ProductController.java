@@ -25,6 +25,11 @@ public class ProductController {
         return productRepository.findAll();
     }
 
+    @PostMapping("/add")
+    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+        return ResponseEntity.ok(productRepository.save(product));
+    }
+
     @PostMapping("/{id}/restock")
     public ResponseEntity<?> restockProduct(@PathVariable Long id) {
         inventoryService.restockProduct(id);

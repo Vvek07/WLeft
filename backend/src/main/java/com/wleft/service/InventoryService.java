@@ -25,12 +25,12 @@ public class InventoryService {
     private static final int LOW_STOCK_THRESHOLD = 5;
 
     @Transactional
-    public void processSale(Long productId) {
+    public void processSale(Long productId, int quantity) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
 
-        if (product.getQuantity() > 0) {
-            product.setQuantity(product.getQuantity() - 1);
+        if (product.getQuantity() >= quantity) {
+            product.setQuantity(product.getQuantity() - quantity);
             productRepository.save(product);
 
             checkAndAlertLowStock(product);

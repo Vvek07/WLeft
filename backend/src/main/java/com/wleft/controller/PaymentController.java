@@ -37,26 +37,27 @@ public class PaymentController {
     private InventoryService inventoryService;
 
     @PostMapping("/create-order/{productId}")
-    public ResponseEntity<?> createOrder(@PathVariable Long productId) {
+    public ResponseEntity<?> createOrder(@PathVariable Long productId, @RequestParam(defaultValue = "1") int quantity) {
         try {
             Product product = productRepository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Product not found"));
 
-            if (product.getQuantity() <= 0) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Product is out of stock");
+            if (product.getQuantity() < quantity) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Not enough stock available");
             }
 
             RazorpayClient razorpay = new RazorpayClient(keyId, keySecret);
 
             JSONObject orderRequest = new JSONObject();
-            // Amount in paise (multiply by 100)
-            orderRequest.put("amount", (int) (product.getPrice() * 100));
+            // Amount in paise (multiply by 100) * quantity
+            orderRequest.put("amount", (int) (product.getPrice() * 100) * quantity);
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "txn_" + System.currentTimeMillis());
 
-            // Critical: Store productId in notes to retrieve it in webhook
+            // Critical: Store productId AND quantity in notes to retrieve it in webhook
             JSONObject notes = new JSONObject();
             notes.put("product_id", String.valueOf(productId));
+            notes.put("quantity", String.valueOf(quantity));
             orderRequest.put("notes", notes);
 
             Order order = razorpay.orders.create(orderRequest);
@@ -84,10 +85,15 @@ public class PaymentController {
 
                 if (notes.has("product_id")) {
                     Long productId = Long.parseLong(notes.getString("product_id"));
-                    System.out.println("Payment success for Product ID: " + productId);
+                    int quantity = 1;
+                    if (notes.has("quantity")) {
+                        quantity = Integer.parseInt(notes.getString("quantity"));
+                    }
+
+                    System.out.println("Payment success for Product ID: " + productId + ", Qty: " + quantity);
 
                     // Trigger Inventory Update
-                    inventoryService.processSale(productId);
+                    inventoryService.processSale(productId, quantity);
                 }
             }
 

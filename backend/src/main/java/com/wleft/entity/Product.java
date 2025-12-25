@@ -10,13 +10,15 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 1000)
     private String title;
 
-    @Column(length = 2000)
+    @Column(columnDefinition = "TEXT")
     private String description;
 
     private Double price;
 
+    @Column(length = 2000)
     private String image;
 
     // Default quantity is 10 as per requirements
