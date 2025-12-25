@@ -1,5 +1,5 @@
 # WLeft - Inventory Payment Hub
-Deployed URL: https://wleft-demo.vercel.app (Example)
+Deployed URL: https://wleft.vercel.app
 
 ## Project Overview
 WLeft is a full-stack Inventory Management System featuring:
